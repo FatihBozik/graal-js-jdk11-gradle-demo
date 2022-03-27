@@ -8,3 +8,6 @@ build
 
 # MacOS bloat
 .DS_Store
+
+# Ignore IntelliJ files
+.idea

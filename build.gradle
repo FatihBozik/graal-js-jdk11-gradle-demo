@@ -1,28 +1,28 @@
 plugins {
     id 'java'
     id 'application'
-    id "org.graalvm.plugin.compiler" version "0.1.0-alpha2"
 }
 
 repositories {
     mavenCentral()      // default repository for fetching dependencies
 }
 
-ext.graalVersion = '20.2.0'
-
-graal {
-    version "$graalVersion"
-}
+ext.graalVersion = '22.0.0.2'
 
 application {
     mainClassName 'com.mycompany.app.App'
 }
 
 dependencies {
-    implementation "org.graalvm.sdk:graal-sdk:$graalVersion"
+    // GRAALJS
     implementation "org.graalvm.js:js:$graalVersion"
-    // necessary to integrate with legacy ScriptEngine based implementation
-    implementation "org.graalvm.js:js-scriptengine:$graalVersion"
+
+    // NASHORN
+    implementation 'org.openjdk.nashorn:nashorn-core:15.3'
+
+    // RHINO
+    implementation 'org.mozilla:rhino:1.7.14'
+
 
     testImplementation 'junit:junit:4.12'
 }

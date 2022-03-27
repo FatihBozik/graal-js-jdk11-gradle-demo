@@ -3,7 +3,7 @@
 This is a simple Gradle project that demonstrates how it's possible to run
 [GraalJS](http://www.graalvm.org/docs/reference-manual/languages/js/) on a
 stock JDK11. The application is a simple JavaScript benchmark embedded in a
-Java application which compares performance of GraalJS and Nashorn.
+Java application which compares performance of GraalJS, Nashorn and Rhino.
 
 ## Pre requirements
 

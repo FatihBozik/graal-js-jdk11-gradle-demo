@@ -41,21 +41,22 @@
 package com.mycompany.app;
 
 import org.graalvm.polyglot.Context;
-import org.graalvm.polyglot.Value;
-import javax.script.ScriptEngineManager;
-import javax.script.ScriptEngine;
-import javax.script.Invocable;
-import java.io.IOException;
 import org.graalvm.polyglot.Source;
+import org.graalvm.polyglot.Value;
+import org.mozilla.javascript.Function;
+import org.mozilla.javascript.Scriptable;
+
+import javax.script.Invocable;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import java.io.IOException;
 
 /**
  * Simple benchmark for Graal.js via GraalVM Polyglot Context and ScriptEngine.
  */
 public class App {
-
     public static final int WARMUP = 15;
     public static final int ITERATIONS = 10;
-    public static final String BENCHFILE = "src/bench.js";
 
     public static final String SOURCE = ""
             + "var N = 2000;\n"
@@ -113,7 +114,7 @@ public class App {
 
     public static void main(String[] args) throws Exception {
         benchGraalPolyglotContext();
-        benchGraalScriptEngine();
+        benchRhinoContext();
         benchNashornScriptEngine();
     }
 
@@ -138,7 +139,7 @@ public class App {
         return took;
     }
 
-    static long benchNashornScriptEngine() throws IOException {
+    static long benchNashornScriptEngine() {
         System.out.println("=== Nashorn via javax.script.ScriptEngine ===");
         ScriptEngine nashornEngine = new ScriptEngineManager().getEngineByName("nashorn");
         if (nashornEngine == null) {
@@ -149,18 +150,29 @@ public class App {
         }
     }
 
-    static long benchGraalScriptEngine() throws IOException {
-        System.out.println("=== Graal.js via javax.script.ScriptEngine ===");
-        ScriptEngine graaljsEngine = new ScriptEngineManager().getEngineByName("graal.js");
-        if (graaljsEngine == null) {
-            System.out.println("*** Graal.js not found ***");
-            return 0;
-        } else {
-            return benchScriptEngineIntl(graaljsEngine);
+    static long benchRhinoContext() {
+        System.out.println("=== Rhino via org.mozilla.javascript.Context ===");
+        long took = 0;
+        try (org.mozilla.javascript.Context context = org.mozilla.javascript.Context.enter()) {
+            final Scriptable scope = context.initStandardObjects();
+            context.evaluateString(scope, SOURCE, "src.js", 1, null);
+            final Function primesMain = (Function) scope.get("primesMain", scope);
+            System.out.println("warming up ...");
+            for (int i = 0; i < WARMUP; i++) {
+                primesMain.call(context, scope, scope, new Object[]{});
+            }
+            System.out.println("warmup finished, now measuring");
+            for (int i = 0; i < ITERATIONS; i++) {
+                long start = System.currentTimeMillis();
+                primesMain.call(context, scope, scope, new Object[]{});
+                took = System.currentTimeMillis() - start;
+                System.out.println("iteration: " + took);
+            }
         }
+        return took;
     }
 
-    private static long benchScriptEngineIntl(ScriptEngine eng) throws IOException {
+    private static long benchScriptEngineIntl(ScriptEngine eng) {
         long took = 0L;
         try {
             eng.eval(SOURCE);
@@ -181,5 +193,4 @@ public class App {
         }
         return took;
     }
-
 }
